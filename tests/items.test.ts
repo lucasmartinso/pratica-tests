@@ -34,33 +34,30 @@ describe('Testa POST /items ', () => {
 
 describe('Testa GET /items ', () => {
   it('Deve retornar status 200 e o body no formato de Array', async () => { 
-    const { status }: any = await supertest(app).get("/items");
+    const { status, body }: any = await supertest(app).get("/items").send();
 
     expect(status).toBe(200);
+    expect(body).toBeInstanceOf(Array);
   })
 });
 
 describe('Testa GET /items/:id ', () => {
   it('Deve retornar status 200 e um objeto igual a o item cadastrado', async () => {
-    const randomNumber = __randomNumber(1);   
-    for(let i=0; i<10; i++) { 
-      const items = __itemsFactorie(); 
-      await insert(items);
-    } 
+    const items = await __itemsFactorie(); 
 
-    const result = await findAll(); 
-    console.log(result);
+    const { body } = await supertest(app).post("/items").send(items);
+    const id = body.id;
     
-    const { status } = await supertest(app).get(`/tests/${randomNumber}`);
+    const result = await supertest(app).get(`/items/${id}`).send();
 
-    expect(status).toBe(200);
+    expect(result.status).toBe(200);
+    expect(body).toMatchObject(result.body);
    });
 
   it('Deve retornar status 404 caso não exista um item com esse id', async () => { 
     const randomNumber = __randomNumber(9);   
-    const result = await findAll(); 
     
-    const { status } = await supertest(app).get(`/tests/${randomNumber}`);
+    const { status } = await supertest(app).get(`/tests/${randomNumber}`).send();
 
     expect(status).toBe(404);
   });
